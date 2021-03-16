@@ -14,7 +14,7 @@ const urlDatabase = {
 };
 
 const generateRandomString = () => {
-  const charArr = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" // length is 62
+  const charArr = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; // length is 62
   let randString = '';
   for (let i = 0; i < 6; i++) {
     randString += charArr[(Math.floor(Math.random() * 62))]; // adds random letter from charArr
@@ -22,7 +22,7 @@ const generateRandomString = () => {
   return randString;
 };
 
-const getKeyByValue = (object, value) => {
+const getKeyByValue = (value, object = urlDatabase) => {
   return Object.keys(object).find(key => object[key] === value);
 };
 
@@ -38,7 +38,7 @@ app.get("/urls", (req, res) => { // homepage/url-list
 app.post("/urls", (req, res) => { // user sends request to generate shortened url
   const longURL = req.body.longURL;
   if (Object.values(urlDatabase).indexOf((longURL)) > -1) {
-    const shortURL = getKeyByValue(urlDatabase, longURL);
+    const shortURL = getKeyByValue(longURL);
     res.redirect(`/urls/${shortURL}`);
   } else {
     const shortURL = generateRandomString();
@@ -46,6 +46,7 @@ app.post("/urls", (req, res) => { // user sends request to generate shortened ur
     res.redirect(`/urls/${shortURL}`);
   }
 });
+
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
@@ -63,6 +64,20 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
+});
+
+app.post("/urls/:shortURL", (req, res) => {
+  const updatedLongURL = req.body.updatedLongURL;
+  let shortURL = req.params.shortURL;
+  // if updatedLongURL already exists in database, deletes shortURL being edited and redirects to existing shortURL
+  if (Object.values(urlDatabase).indexOf((updatedLongURL)) > -1) {
+    delete urlDatabase[shortURL];
+    shortURL = getKeyByValue(updatedLongURL);
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    urlDatabase[shortURL] = updatedLongURL;
+    res.redirect(`/urls/${shortURL}`);
+  }
 });
 
 app.get("/urls.json", (req, res) => {
