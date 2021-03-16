@@ -43,10 +43,11 @@ app.post("/urls", (req, res) => { // user sends request to generate shortened ur
   if (Object.values(urlDatabase).indexOf((longURL)) > -1) {
     const shortURL = getKeyByValue(longURL);
     res.redirect(`/urls/${shortURL}`);
+  } else {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = longURL;
+    res.redirect(`/urls/${shortURL}`);
   }
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
-  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -72,15 +73,13 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const updatedLongURL = req.body.updatedLongURL;
   let shortURL = req.params.shortURL;
-  // if updatedLongURL already exists in database, deletes shortURL being edited and redirects to existing shortURL
+  // if updatedLongURL already exists in database, deletes existing record
   if (Object.values(urlDatabase).indexOf((updatedLongURL)) > -1) {
-    delete urlDatabase[shortURL];
-    shortURL = getKeyByValue(updatedLongURL);
-    res.redirect(`/urls/${shortURL}`);
-  } else {
-    urlDatabase[shortURL] = updatedLongURL;
-    res.redirect(`/urls/${shortURL}`);
+    const origShortURL = getKeyByValue(updatedLongURL);
+    delete urlDatabase[origShortURL];
   }
+  urlDatabase[shortURL] = updatedLongURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls.json", (req, res) => {
@@ -96,8 +95,7 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
-})
-
+});
 
 app.listen(PORT, () => {
   console.log(`TinyApp server listening on port ${PORT}!`);
