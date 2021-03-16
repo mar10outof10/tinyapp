@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+// app.use(express.urlencoded()); // better version of bodyparser?? get more info
 
 app.set("view engine", "ejs");
 
@@ -21,20 +22,33 @@ const generateRandomString = () => {
   return randString;
 };
 
+const getKeyByValue = (object, value) => {
+  return Object.keys(object).find(key => object[key] === value);
+};
+
 app.get("/", (req, res) => {
   res.redirect('/urls');
 });
 
-app.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => { // homepage/url-list
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
+app.post("/urls", (req, res) => { // user sends request to generate shortened url
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect(`/urls/${shortURL}`);
+  if (Object.values(urlDatabase).indexOf((longURL)) > -1) {
+    const shortURL = getKeyByValue(urlDatabase, longURL);
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = longURL;
+    res.redirect(`/urls/${shortURL}`);
+  }
+});
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -51,14 +65,10 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp server listening on port ${PORT}!`);
 });
