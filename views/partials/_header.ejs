@@ -5,9 +5,30 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+      <div class="navbar-nav align-items-center">
+        <div class="col-auto">
+          <a class="nav-item nav-link" href="/urls">My URLs</a>
+        </div>
+        <div class="col-auto">
+          <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        </div> 
+        <div class="col-auto">
+          <% if(username){ %>
+          <p>Logged in as user: <%= username %></p>
+        </div>
+        <div class="col-auto">
+          <form class="logout" method="POST" action="/logout">
+            <button type="submit" class="btn btn-primary">Logout</button>
+          </form>
+        </div>
+          <% } else{ %>
+          <form class="form-inline" method="POST" action="/login">
+            <label for="username">Enter a Username:</label>
+            <input class="form-control" type="text" name="username" style="width: 200px; margin: 1em">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+          <% } %>
+        </div>
       </div>
     </div>
   </nav>
