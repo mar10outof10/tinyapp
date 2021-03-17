@@ -15,9 +15,9 @@
     <%- include('partials/_header') %>
 
     <main style="margin: 1em;">
-      <h3>Register Account</h3>
+      <h3>Log in to your account :-)</h3>
       <% if (error) { %>
-        <h5 style="color:red">Error: email not in database or password incorrect</h5> 
+        <h5 style="color:red"><%= error %></h5> 
       <% } %> 
       <form action="/login" method="POST" class="aling-items-center">
         <div class="form-group row">

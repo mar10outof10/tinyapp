@@ -16,15 +16,15 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
 };
@@ -43,14 +43,14 @@ const getKeyByValue = (value, object = urlDatabase) => {
 };
 
 // returns userId for enterred email in database (Default db is users). Returns false if not found
-const fetchEmail = (email, database = users) => {
+const fetchUserId = (email, database = users) => {
   for (const user in database) {
     if (database[user].email === email) {
       return user;
     }
   }
   return false;
-}
+};
 
 app.get("/", (req, res) => {
   res.redirect('/urls');
@@ -67,7 +67,7 @@ app.post("/urls", (req, res) => { // user sends request to generate shortened ur
     const shortURL = getKeyByValue(longURL);
     res.redirect(`/urls/${shortURL}`);
     return;
-  } 
+  }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -89,7 +89,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
   res.render("urls_show", templateVars);
 });
 
@@ -118,15 +118,15 @@ app.post("/register", (req, res) => {
   const { email, password } = req.body;
   if (email === '' || password === '') {
     res.status(400);
-    res.send('nooooo');
+    res.send('Email/password fields cannot be empty');
     return;
   }
-  if (fetchEmail(email)) {
-      const templateVars = { user: users[req.cookies["user_id"]], error: true };
-      res.status(400);
-      res.render("register", templateVars);
-      return;
-    }
+  if (fetchUserId(email)) {
+    const templateVars = { user: users[req.cookies["user_id"]], error: true };
+    res.status(400);
+    res.render("register", templateVars);
+    return;
+  }
   const id = generateRandomString();
   users[id] = { id, email, password };
   res.cookie('user_id', id);
@@ -137,11 +137,29 @@ app.post("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.cookies["user_id"]], error: false };
   res.render("login", templateVars);
-})
+});
 
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie('username', username);
+  const { email, password } = req.body;
+  if (email === '' || password === '') {
+    res.status(400);
+    res.send('Email/password fields cannot be empty');
+    return;
+  }
+  const userId = fetchUserId(email);
+  if (!fetchUserId(email)) { // validates if email exists in database
+    const templateVars = { user: users[req.cookies["user_id"]], error: 'Email not found' };
+    res.status(403);
+    res.render("login", templateVars);
+    return;
+  }
+  if (users[userId].password !== password) { // passwords do not match
+    const templateVars = { user: users[req.cookies["user_id"]], error: 'Password incorrect' };
+    res.status(403);
+    res.render("login", templateVars);
+    return;
+  }
+  res.cookie('user_id', userId);
   res.redirect('/urls');
 });
 
