@@ -13,8 +13,11 @@
           <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         </div> 
         <div class="col-auto">
+          <a class="nav-item nav-link" href="/register">Register</a>
+        </div>
+        <div class="col-auto">
           <% if(username){ %>
-          <p>Logged in as user: <%= username %></p>
+            <span class="align-middle">Logged in as user: <%= username %></span>
         </div>
         <div class="col-auto">
           <form class="logout" method="POST" action="/logout">

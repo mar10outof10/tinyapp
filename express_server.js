@@ -43,11 +43,11 @@ app.post("/urls", (req, res) => { // user sends request to generate shortened ur
   if (Object.values(urlDatabase).indexOf((longURL)) > -1) {
     const shortURL = getKeyByValue(longURL);
     res.redirect(`/urls/${shortURL}`);
-  } else {
-    const shortURL = generateRandomString();
-    urlDatabase[shortURL] = longURL;
-    res.redirect(`/urls/${shortURL}`);
-  }
+    return;
+  } 
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -85,6 +85,18 @@ app.post("/urls/:shortURL", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+
+app.get("/register", (req, res) => {
+  const templateVars = { username: req.cookies["username"] };
+  res.render("register", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+  console.log(email, password);
+  const templateVars = { username: req.cookies["username"]}
+  res.render("register", templateVars);
+})
 
 app.post("/login", (req, res) => {
   const username = req.body.username;
