@@ -17,7 +17,7 @@
     <main style="margin: 1em;">
       <h3>Register Account</h3>
       <% if (error) { %>
-        <h5 style="color:red">Error: email already registered, please try again</h5> 
+        <h5 style="color:red"><%= error %> </h5> 
       <% } %> 
       <form action="/register" method="POST" class="aling-items-center">
         <div class="form-group row">
