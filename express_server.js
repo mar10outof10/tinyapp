@@ -4,6 +4,8 @@ const cookieSession = require('cookie-session');
 // const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 
+const { generateRandomString, urlsForUser, fetchUserId } = require('./helpers');
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -18,75 +20,23 @@ app.use(cookieSession({
 
 app.set("view engine", "ejs");
 
-const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID" }
-};
+const urlDatabase = {};
 
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
-};
-
-const generateRandomString = () => {
-  const charArr = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; // length is 62
-  let randString = '';
-  for (let i = 0; i < 6; i++) {
-    randString += charArr[(Math.floor(Math.random() * 62))]; // adds random letter from charArr
-  }
-  return randString;
-};
-
-// returns shortURL key for a given longURL value in the database. Returns false if not found.
-const fetchShortURL = (longURL, database = urlDatabase) => {
-  for (const shortURL in database) {
-    if (database[shortURL].longURL === longURL) {
-      return shortURL;
-    }
-  }
-  return false;
-};
-// returns array of shortURLs whose id properties match the id parameter
-const urlsForUser = (id, database = urlDatabase) => {
-  const userURLs = [];
-  for (const shortURL in database) {
-    if (database[shortURL].userID === id) {
-      userURLs.push(shortURL);
-    }
-  }
-  return userURLs;
-};
-
-
-// returns userId for enterred email in database (Default db is users). Returns false if not found
-const fetchUserId = (email, database = users) => {
-  for (const user in database) {
-    if (database[user].email === email) {
-      return user;
-    }
-  }
-  return false;
-};
+const users = {};
 
 app.get("/", (req, res) => {
   res.redirect('/login');
 });
 
 app.get("/urls", (req, res) => { // homepage/url-list
+  console.log(users);
+  console.log(urlDatabase);
   const userID = req.session.user_id;
   if (!userID) {
     res.redirect('/login');
     return;
   }
-  const userURLs = urlsForUser(userID);
+  const userURLs = urlsForUser(userID, urlDatabase);
   const userObj = {};
   for (const url of userURLs) {
     userObj[url] = urlDatabase[url];
@@ -97,11 +47,6 @@ app.get("/urls", (req, res) => { // homepage/url-list
 
 app.post("/urls", (req, res) => { // user sends request to generate shortened url
   const longURL = req.body.longURL;
-  if (fetchShortURL(longURL)) {
-    const shortURL = fetchShortURL(longURL);
-    res.redirect(`/urls/${shortURL}`);
-    return;
-  }
   const userID = req.session.user_id;
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL, userID };
@@ -144,11 +89,6 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const longURL = req.body.updatedLongURL;
   const shortURL = req.params.shortURL;
-  // if longURL already exists in database, deletes existing record
-  if (fetchShortURL(longURL)) {
-    const origShortURL = fetchShortURL(longURL);
-    delete urlDatabase[origShortURL];
-  }
   const userID = req.session.user_id;
   urlDatabase[shortURL] = { longURL, userID };
   res.redirect(`/urls/${shortURL}`);
@@ -171,7 +111,7 @@ app.post("/register", (req, res) => {
     res.render("register", templateVars);
     return;
   }
-  if (fetchUserId(email)) {
+  if (fetchUserId(email, users)) {
     // res.sendStatus(400).send(`Email ${email} is already registered`);
     const templateVars = { user: users[req.session.user_id], error: `Email ${email} is already registered` };
     res.render("register", templateVars);
@@ -180,7 +120,6 @@ app.post("/register", (req, res) => {
   const id = generateRandomString();
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[id] = { id, email, password: hashedPassword };
-  console.log(users[id]);
   req.session.user_id = id;
   res.redirect('/urls');
 });
@@ -198,8 +137,8 @@ app.post("/login", (req, res) => {
     res.render("login", templateVars);
     return;
   }
-  const userId = fetchUserId(email);
-  if (!fetchUserId(email)) { // validates if email exists in database
+  const userId = fetchUserId(email,users);
+  if (!fetchUserId(email, users)) { // validates if email exists in database
     // res.status(403).send(`Email ${email} not found`);
     const templateVars = { user: users[req.session.user_id], error: 'Email not found' };
     res.render("login", templateVars);
