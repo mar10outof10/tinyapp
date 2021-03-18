@@ -24,6 +24,7 @@ const users = {};
 app.get("/", (req, res) => {
   if (req.session.userID) {
     res.redirect('/urls');
+    return;
   }
   res.redirect('/login');
 });
@@ -50,6 +51,7 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   if (!userID) { // no user logged in
     res.sendStatus(401);
+    return;
   }
   const shortURL = generateRandomString(); // 6 character random string to be used as shortURL
   urlDatabase[shortURL] = { longURL, userID };
@@ -92,7 +94,7 @@ app.post("/urls/:shortURL", (req, res) => {
     return;
   }
   const longURL = req.body.updatedLongURL;
-  urlDatabase[shortURL] = { longURL }; // updates shortURL already in database with new longURL
+  urlDatabase[shortURL].longURL = longURL; // updates shortURL already in database with new longURL
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -111,6 +113,7 @@ app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
     res.sendStatus(404); // shortURL does not exist in database
+    return;
   }
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
