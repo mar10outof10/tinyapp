@@ -1,3 +1,4 @@
+// generates random 6 character string
 const generateRandomString = () => {
   const charArr = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"; // length is 62
   let randString = '';
@@ -6,6 +7,7 @@ const generateRandomString = () => {
   }
   return randString;
 };
+
 // returns array of shortURLs whose id properties match the id parameter
 const urlsForUser = (id, database) => {
   const userURLs = [];
@@ -16,6 +18,7 @@ const urlsForUser = (id, database) => {
   }
   return userURLs;
 };
+
 // returns userId for enterred email in database. Returns undefined if not found
 const fetchUserId = (email, database) => {
   for (const user in database) {
