@@ -16,14 +16,14 @@ const urlsForUser = (id, database) => {
   }
   return userURLs;
 };
-// returns userId for enterred email in database. Returns false if not found
+// returns userId for enterred email in database. Returns undefined if not found
 const fetchUserId = (email, database) => {
   for (const user in database) {
     if (database[user].email === email) {
       return user;
     }
   }
-  return false;
+  return;
 };
 
 module.exports = { generateRandomString, urlsForUser, fetchUserId };
