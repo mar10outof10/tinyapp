@@ -37,6 +37,7 @@ app.get("/urls", (req, res) => { // homepage/url-list
     return;
   }
   const userURLs = urlsForUser(userID, urlDatabase);
+  console.log(userURLs);
   const userObj = {};
   for (const url of userURLs) {
     userObj[url] = urlDatabase[url];
